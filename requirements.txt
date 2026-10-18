@@ -1,0 +1,13 @@
+# Dependências da etapa 1 (versões testadas em 18/10/2026, Python 3.12).
+# Instalação:  pip install -r requirements.txt
+#
+# O índice abaixo garante o PyTorch SOMENTE PARA CPU (cerca de 1 GB a menos
+# que a versão com CUDA, que não teria uso: o notebook da pousada não tem GPU NVIDIA).
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.14.1+cpu
+torchvision==0.29.1+cpu
+
+ultralytics==8.4.182
+opencv-python==5.0.0.93
+python-dotenv==1.2.4
+psutil==7.2.2

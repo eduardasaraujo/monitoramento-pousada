@@ -1,0 +1,18 @@
+# Ambiente virtual
+.venv/
+
+# Credenciais
+config/.env
+
+# Configurações locais da Ultralytics
+config/ultralytics/
+
+# Resultados gerados
+saidas/
+
+# Pesos dos modelos (baixados automaticamente) e vídeos de teste
+modelos/*.pt
+videos/*
+!videos/.gitkeep
+
+__pycache__/
