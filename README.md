@@ -58,8 +58,8 @@ curl -L -o videos/noturno_cctv_mixkit_31372.mp4 https://assets.mixkit.co/videos/
 Com o ambiente instalado e o vídeo baixado:
 
 ```bash
-# 1. Detecção com janela ao vivo e vídeo anotado salvo em saidas/
-.venv/bin/python src/detectar_pessoas.py --fonte videos/noturno_cctv_mixkit_31372.mp4 --salvar
+# 1. Detecção com janela ao vivo, repetindo até apertar q
+.venv/bin/python src/detectar_pessoas.py --fonte videos/noturno_cctv_mixkit_31372.mp4 --repetir
 
 # 2. Mesmo teste simulando a CPU do notebook da pousada (só Linux), para mostrar as métricas
 scripts/simular_notebook_pousada.sh --fonte videos/noturno_cctv_mixkit_31372.mp4 --sem-janela
@@ -75,7 +75,7 @@ scripts/simular_notebook_pousada.sh --fonte videos/noturno_cctv_mixkit_31372.mp4
 .venv/bin/python src/detectar_pessoas.py --fonte videos/noturno_cctv_mixkit_31372.mp4
 ```
 
-Uma janela mostra as detecções (tecla `q` encerra). Ao final aparece um resumo com
+Uma janela mostra as detecções (tecla `q` ou o X da janela encerram). Ao final aparece um resumo com
 quadros analisados, detecções, tempo de inferência, uso de CPU e memória. O mesmo resumo
 é gravado em `saidas/execucao.log`.
 
@@ -89,6 +89,7 @@ quadros analisados, detecções, tempo de inferência, uso de CPU e memória. O 
 | `--threads` | `4` | threads de CPU do PyTorch/OpenCV |
 | `--salvar` | — | grava o vídeo anotado em `saidas/` |
 | `--sem-janela` | — | não abre janela (use para medir desempenho) |
+| `--repetir` | — | recomeça o vídeo ao terminar e só para com `q`; o vídeo salvo guarda só a 1ª passagem |
 
 Ao reproduzir um **arquivo**, o programa roda o mais rápido que conseguir, não na velocidade
 real do vídeo. É por isso que o "fator tempo real" pode passar de 1.

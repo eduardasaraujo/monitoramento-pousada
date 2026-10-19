@@ -31,6 +31,7 @@ from fonte_video import abrir_fonte  # noqa: E402
 
 CLASSE_PESSOA = 0  # no conjunto de dados COCO, usado no treino do YOLO, a classe 0 é "person"
 COR_CAIXA = (0, 255, 0)  # verde, no formato BGR do OpenCV
+TITULO_JANELA = "Deteccao de pessoas (q para sair)"
 
 
 def ler_argumentos():
@@ -51,7 +52,13 @@ def ler_argumentos():
                         help="Salva o vídeo com as detecções em saidas/")
     parser.add_argument("--sem-janela", action="store_true",
                         help="Não abre janela de exibição (útil para medir desempenho)")
-    return parser.parse_args()
+    parser.add_argument("--repetir", action="store_true",
+                        help="Ao chegar ao fim do vídeo, recomeça; só encerra com a tecla q (bom para demonstração)")
+    args = parser.parse_args()
+    if args.repetir and args.sem_janela:
+        # Sem janela não há como apertar q, e o programa nunca terminaria
+        parser.error("--repetir precisa da janela; não use junto com --sem-janela")
+    return args
 
 
 def configurar_log(pasta_saidas):
@@ -106,6 +113,8 @@ def main():
     logging.info("Parâmetros: conf=%.2f imgsz=%d threads=%d", args.conf, args.imgsz, args.threads)
 
     gravador = None
+    primeira_volta = True  # com --repetir, o vídeo anotado só grava a primeira passagem
+    quadros_desde_inicio = 0
     quadros_lidos = 0
     quadros_analisados = 0
     quadros_com_pessoa = 0
@@ -121,9 +130,22 @@ def main():
         if not captura.grab():
             if args.fonte == "rtsp":
                 logging.error("Falha ao ler quadro da câmera (conexão perdida?)")
+                break
+            # quadros_desde_inicio > 0 evita repetir para sempre um vídeo que não consegue ser lido
+            if args.repetir and quadros_desde_inicio > 0:
+                logging.info("Fim do vídeo, recomeçando (tecla q encerra)")
+                if gravador is not None:
+                    # Fecha o arquivo já na 1ª volta: um MP4 só fica válido depois do release()
+                    gravador.release()
+                    gravador = None
+                captura.set(cv2.CAP_PROP_POS_FRAMES, 0)
+                primeira_volta = False
+                quadros_desde_inicio = 0
+                continue
             break
         quadros_lidos += 1
-        if (quadros_lidos - 1) % passo != 0:
+        quadros_desde_inicio += 1
+        if (quadros_desde_inicio - 1) % passo != 0:
             continue
 
         ok, quadro = captura.retrieve()
@@ -146,7 +168,7 @@ def main():
         cv2.putText(quadro, f"{len(caixas)} pessoa(s) | {tempos_inferencia[-1] * 1000:.0f} ms",
                     (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
 
-        if args.salvar:
+        if args.salvar and primeira_volta:
             if gravador is None:
                 altura, largura = quadro.shape[:2]
                 nome = Path(args.fonte).stem if args.fonte != "rtsp" else "rtsp"
@@ -157,9 +179,13 @@ def main():
             gravador.write(quadro)
 
         if not args.sem_janela:
-            cv2.imshow("Deteccao de pessoas (q para sair)", quadro)
+            cv2.imshow(TITULO_JANELA, quadro)
             if cv2.waitKey(1) & 0xFF == ord("q"):
                 logging.info("Interrompido pelo usuário")
+                break
+            # Fechar a janela no X também encerra (senão o imshow a reabriria)
+            if cv2.getWindowProperty(TITULO_JANELA, cv2.WND_PROP_VISIBLE) < 1:
+                logging.info("Janela fechada pelo usuário")
                 break
 
         memoria_pico = max(memoria_pico, processo.memory_info().rss)
