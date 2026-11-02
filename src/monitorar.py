@@ -190,6 +190,7 @@ class Monitor:
         if self.leitor is not None:
             self.leitor.parar()
         cv2.destroyAllWindows()
+        self.notificador.aguardar_envios(limite_s=15)  # tenta mandar o que ainda estiver na fila
         logging.info("Programa encerrado")
 
 
@@ -200,8 +201,10 @@ def main():
         config = yaml.safe_load(arquivo)
 
     if args.testar_alerta:
-        Notificador(PASTA_PROJETO / "saidas" / "alertas", config["dias_guardar_fotos"]).enviar(
+        notificador = Notificador(PASTA_PROJETO / "saidas" / "alertas", config["dias_guardar_fotos"])
+        notificador.enviar(
             f"Teste de alerta do monitoramento: {config['ambiente']}. Se você recebeu, está funcionando.")
+        notificador.aguardar_envios(limite_s=30)
         return 0
 
     # Confere a fonte antes de começar, para não ficar tentando reconectar a algo que nunca vai existir
