@@ -12,6 +12,7 @@ Exemplo:
 import argparse
 import logging
 import os
+import signal
 import time
 from datetime import datetime
 from pathlib import Path
@@ -140,7 +141,12 @@ def main():
     cpu_inicio = processo.cpu_times()
     inicio = time.perf_counter()
 
-    while True:
+    # Ctrl+C só marca o pedido de parada; o laço termina no próximo quadro e o resumo é mostrado.
+    # Sem isso, com RTSP e --sem-janela não havia como encerrar sem perder o resumo.
+    pedido_parada = []
+    signal.signal(signal.SIGINT, lambda *_: pedido_parada.append(True))
+
+    while not pedido_parada:
         # grab() lê o próximo quadro; retrieve() só o converte em imagem quando ele será analisado
         if not captura.grab():
             if args.fonte == "rtsp":
@@ -205,6 +211,8 @@ def main():
 
         memoria_pico = max(memoria_pico, processo.memory_info().rss)
 
+    if pedido_parada:
+        logging.info("Interrompido com Ctrl+C")
     tempo_total = time.perf_counter() - inicio
     cpu_fim = processo.cpu_times()
     captura.release()
