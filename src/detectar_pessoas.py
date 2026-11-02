@@ -38,6 +38,9 @@ def ler_argumentos():
     parser = argparse.ArgumentParser(description="Detecta pessoas em vídeo usando YOLO.")
     parser.add_argument("--fonte", required=True,
                         help='Caminho do arquivo de vídeo, ou "rtsp" para usar a câmera do config/.env')
+    parser.add_argument("--canal", help="Com --fonte rtsp: canal do DVR (1 a 8); substitui DVR_CANAL do .env")
+    parser.add_argument("--subtipo", choices=["0", "1"],
+                        help="Com --fonte rtsp: 0 = fluxo principal, 1 = substream; substitui DVR_SUBTIPO do .env")
     parser.add_argument("--modelo", default=str(PASTA_PROJETO / "modelos" / "yolo11n.pt"),
                         help="Arquivo de pesos do YOLO (padrão: modelos/yolo11n.pt)")
     parser.add_argument("--conf", type=float, default=0.25,
@@ -107,7 +110,7 @@ def main():
     modelo = YOLO(args.modelo)
 
     try:
-        captura, descricao = abrir_fonte(args.fonte)
+        captura, descricao = abrir_fonte(args.fonte, args.canal, args.subtipo)
     except (FileNotFoundError, ConnectionError, ValueError) as erro:
         logging.error("%s", erro)
         return 1
@@ -183,7 +186,7 @@ def main():
         if args.salvar and primeira_volta:
             if gravador is None:
                 altura, largura = quadro.shape[:2]
-                nome = Path(args.fonte).stem if args.fonte != "rtsp" else "rtsp"
+                nome = Path(args.fonte).stem if args.fonte != "rtsp" else f"rtsp_canal{args.canal or 'env'}"
                 caminho_saida = pasta_saidas / f"{nome}_{datetime.now():%Y%m%d_%H%M%S}.mp4"
                 gravador = cv2.VideoWriter(str(caminho_saida), cv2.VideoWriter_fourcc(*"mp4v"),
                                            fps_fonte / passo, (largura, altura))
