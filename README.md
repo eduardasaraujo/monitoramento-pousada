@@ -1,4 +1,4 @@
-# Monitoramento Noturno Inteligente para Pousada — Etapa 1
+# Monitoramento Noturno Inteligente para Pousada
 
 Projeto acadêmico de Robótica Inclusiva. Esta primeira etapa valida o início da arquitetura:
 

@@ -16,3 +16,6 @@ videos/*
 !videos/.gitkeep
 
 __pycache__/
+
+# Salvamentos de emergência do nano
+*.save
