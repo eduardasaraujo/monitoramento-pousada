@@ -1,0 +1,39 @@
+# Configuração do monitoramento (uma câmera).
+# Credenciais do DVR e do Telegram NÃO ficam aqui: ficam no config/.env.
+
+# Nome do ambiente, usado nas mensagens de alerta
+ambiente: Recepção
+
+camera:
+  canal: 1        # canal do DVR onde esta câmera está ligada (1 a 8)
+  subtipo: 1      # 1 = substream (recomendado), 0 = fluxo principal
+
+# Período em que a presença de pessoas gera alerta.
+# Pode atravessar a meia-noite (ex.: 23:00 às 06:00).
+horario:
+  inicio: "23:00"
+  fim: "06:00"
+
+# Arquivo com o polígono da área monitorada, criado pelo src/desenhar_area.py.
+# Se o arquivo não existir, a imagem inteira é monitorada.
+area_interesse: config/area_interesse.json
+
+deteccao:
+  modelo: modelos/yolo11n.pt
+  conf: 0.25      # confiança mínima de cada detecção (0 a 1)
+  imgsz: 640      # tamanho da entrada do YOLO (416 é mais rápido e detecta menos)
+  fps_alvo: 5     # quadros analisados por segundo
+  threads: 4
+
+# Alerta só quando houver pessoa em pelo menos `minimo_quadros` dos últimos `janela_quadros`
+# analisados. Com 5 quadros/s, janela 5 = último segundo.
+confirmacao:
+  janela_quadros: 5
+  minimo_quadros: 3
+  intervalo_entre_alertas_min: 5   # depois de um alerta, espera isto antes de alertar de novo
+
+# Avisa se a câmera ficar este tempo sem enviar imagem
+camera_sem_imagem_s: 60
+
+# Fotos dos alertas são apagadas depois deste prazo (LGPD)
+dias_guardar_fotos: 30
