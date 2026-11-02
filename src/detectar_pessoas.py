@@ -83,6 +83,18 @@ def desenhar_deteccoes(quadro, caixas):
                     cv2.FONT_HERSHEY_SIMPLEX, 0.6, COR_CAIXA, 2)
 
 
+def janela_fechada():
+    """Diz se o usuário fechou a janela no X.
+
+    Dependendo do sistema, o OpenCV responde de dois jeitos a uma janela já fechada:
+    devolve um valor menor que 1 ou lança um erro (backend Qt, no Linux).
+    """
+    try:
+        return cv2.getWindowProperty(TITULO_JANELA, cv2.WND_PROP_VISIBLE) < 1
+    except cv2.error:
+        return True
+
+
 def main():
     args = ler_argumentos()
     pasta_saidas = PASTA_PROJETO / "saidas"
@@ -184,7 +196,7 @@ def main():
                 logging.info("Interrompido pelo usuário")
                 break
             # Fechar a janela no X também encerra (senão o imshow a reabriria)
-            if cv2.getWindowProperty(TITULO_JANELA, cv2.WND_PROP_VISIBLE) < 1:
+            if janela_fechada():
                 logging.info("Janela fechada pelo usuário")
                 break
 
