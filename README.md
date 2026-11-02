@@ -103,6 +103,71 @@ real do vídeo. É por isso que o "fator tempo real" pode passar de 1.
 - **Quadros com pessoa**: não é acurácia, porque não há rótulos verdadeiros. É preciso comparar
   com o vídeo para saber quantos quadros realmente têm pessoa.
 
+## Sistema de monitoramento (1 câmera)
+
+`src/monitorar.py` é o sistema que fica rodando na pousada:
+
+```
+fora do horário  → câmera desligada, nada é processado
+dentro do horário → câmera → YOLO → pessoas com os pés DENTRO da área de interesse
+                  → confirmação (3 de 5 quadros) → alerta: log + foto + Telegram
+```
+
+| Arquivo | Função |
+|---|---|
+| `config/monitoramento.yaml` | Ambiente, canal da câmera, horário, parâmetros (edite aqui) |
+| `src/monitorar.py` | Programa principal |
+| `src/regras.py` | Horário (inclusive atravessando a meia-noite), área de interesse e confirmação |
+| `src/leitor_camera.py` | Lê a câmera numa thread, guarda só o quadro mais recente e reconecta se cair |
+| `src/alertas.py` | Registra, salva a foto e envia pelo Telegram; apaga fotos antigas (LGPD) |
+| `src/desenhar_area.py` | Desenha a área de interesse clicando sobre a imagem da câmera |
+| `scripts/instalar_servico.sh` | Faz o sistema iniciar sozinho com o computador |
+
+Mensagens enviadas: início e fim do monitoramento (com o total de alertas da noite), pessoa
+detectada (com foto), câmera sem imagem e câmera de volta. Se a mensagem de início não chegar,
+há algum problema.
+
+### Passo a passo na pousada
+
+```bash
+# 1. Configurar: canal, ambiente e horário em config/monitoramento.yaml; DVR e Telegram em config/.env
+# 2. Desenhar a área (o contorno do CHÃO que deve ser vigiado)
+.venv/bin/python src/desenhar_area.py --canal 1
+# 3. Conferir o Telegram
+.venv/bin/python src/monitorar.py --testar-alerta
+# 4. Testar de dia, vendo a imagem (alguém passa na área e o alerta deve chegar)
+.venv/bin/python src/monitorar.py --ignorar-horario --janela
+# 5. Deixar rodando sozinho
+scripts/instalar_servico.sh
+```
+
+Para testar sem câmera: `.venv/bin/python src/monitorar.py --fonte videos/noturno_cctv_mixkit_31372.mp4 --ignorar-horario --janela`
+
+### Criar o bot do Telegram (uns 2 minutos)
+
+1. No Telegram, converse com **@BotFather**, envie `/newbot` e siga as instruções. Ele devolve o
+   **token**: coloque em `TELEGRAM_TOKEN` no `config/.env`.
+2. Mande qualquer mensagem para o seu bot. Para alertar a equipe, crie um grupo, adicione o bot e
+   mande uma mensagem no grupo.
+3. Abra `https://api.telegram.org/bot<TOKEN>/getUpdates` no navegador e copie o número de
+   `"chat":{"id": ...}` para `TELEGRAM_CHAT_ID` (em grupos, ele começa com `-`).
+4. Rode `--testar-alerta` e confira se a mensagem chegou.
+
+## Ferramentas para instalar e testar na pousada
+
+| Script | Para que serve |
+|---|---|
+| `scripts/empacotar.sh` | Gera `saidas/pacote_pousada.tar.gz` (código, modelo e vídeo de teste, sem senhas) para copiar a outro computador |
+| `scripts/instalar.sh` | Instala tudo num Linux novo: ambiente virtual, dependências, modelo e `config/.env` |
+| `scripts/medir_desempenho.sh` | Mede o desempenho **real** do computador: 1 e 3 câmeras, entradas 640 e 416. Salva em `saidas/desempenho_<data>.txt` |
+| `src/coletar_cameras.py` | Testa cada canal do DVR e salva foto, vídeo bruto e `resumo.csv` (resolução, FPS, codec) |
+
+```bash
+.venv/bin/python src/coletar_cameras.py --canais 1-8 --segundos 5    # quais canais têm câmera?
+.venv/bin/python src/coletar_cameras.py --canais 2,5 --segundos 60   # trechos maiores das escolhidas
+.venv/bin/python src/detectar_pessoas.py --fonte rtsp --canal 2      # detecção ao vivo numa câmera
+```
+
 ## Câmera RTSP do DVR (preparado, ainda não validado)
 
 1. Copie `config/.env.example` para `config/.env` e preencha IP, usuário, senha e canal.
