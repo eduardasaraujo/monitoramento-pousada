@@ -5,7 +5,7 @@
 ambiente: Recepção
 
 camera:
-  canal: 1        # canal do DVR onde esta câmera está ligada (1 a 8)
+  canal: 3        # canal do DVR onde esta câmera está ligada (1 a 8)
   subtipo: 1      # 1 = substream (recomendado), 0 = fluxo principal
 
 # Período em que a presença de pessoas gera alerta.
@@ -19,7 +19,7 @@ horario:
 area_interesse: config/area_interesse.json
 
 deteccao:
-  modelo: modelos/yolo11n.pt
+  modelo: modelos/yolo11s.pt
   conf: 0.25      # confiança mínima de cada detecção (0 a 1)
   imgsz: 640      # tamanho da entrada do YOLO (416 é mais rápido e detecta menos)
   fps_alvo: 5     # quadros analisados por segundo

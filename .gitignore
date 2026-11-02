@@ -25,3 +25,6 @@ CLAUDE.md
 
 # Imagem de conferência da área (mostra a câmera da pousada)
 config/area_interesse.png
+
+# Área desenhada no local (específica de cada instalação; criada pelo src/desenhar_area.py)
+config/area_interesse.json
